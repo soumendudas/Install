@@ -374,7 +374,7 @@ jstring init2( JNIEnv* env, jobject thiz, const char * dirStr, const char* imeiN
 			sprintf(intCh,"/ISALIVE%d",count);
 			LOG_INFO((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
 							, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, intCh), &b_IS_COPY));
-			sendingMail(env,imeiNo, intCh);
+			sendingMail(env,imeiNo, "/ISALIVE");
 			sleep(pingtimeInt);
 		}
 
