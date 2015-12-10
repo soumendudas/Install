@@ -4,7 +4,7 @@ import android.util.Log;
 
 public class PingServer extends Thread {
 	private final String TAG = PingServer.class.getCanonicalName();
-	private final int PINGTIME = 10000 *60 ;//10000*6*60*24;
+	private final int PINGTIME = 10000 *6 ;//10000*6*60*24;
 	
 	private String imei;
 	

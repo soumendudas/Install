@@ -34,7 +34,7 @@ static jboolean b_IS_COPY = JNI_TRUE;
 
 //jstring nativeFunction(JNIEnv* env, jobject javaThis, jstring disStr, jstring data);
 jstring init1( JNIEnv* env,jobject thiz, const char * dirCh, const char* imeiNum);
-jstring init2( JNIEnv* env,jobject thiz, const char * dirCh, const char* imeiNum);
+jstring init2( JNIEnv* env,jobject thiz, const char * dirCh, const char* imeiNum, int pingtimeInt);
 
 void invoke_heartbeat(JNIEnv* env, jobject javaObj);
 int sendingMail(JNIEnv* env, char* imei, char *msgURL);
@@ -48,7 +48,8 @@ void invokeExec();
 char gImeiNo[100];
 JNIEnv* gEnv;
 
-jstring Java_com_install_app_InstallService_invokeNativeFunction(JNIEnv* env, jobject javaThis, jstring dirStrGlobal, jstring dataGlobal)
+jstring Java_com_installapp_app_InstallService_invokeNativeFunction(JNIEnv* env, jobject javaThis, jstring dirStrGlobal, jstring dataGlobal,
+		jint sdkVer, jint lollipopVer, jint pingtime)
 {
 	jstring tag = (*env)->NewStringUTF(env, c_TAG);
 	LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY), (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "init OK-1"), &b_IS_COPY));
@@ -57,7 +58,16 @@ jstring Java_com_install_app_InstallService_invokeNativeFunction(JNIEnv* env, jo
 	const char* dirCh = (*env)->GetStringUTFChars(env, dirStrGlobal, &b_IS_COPY);
 	const char* imeiNum = (*env)->GetStringUTFChars(env, dataGlobal, &b_IS_COPY);
 
-	jstring retVal = init1(env, javaThis, dirCh, imeiNum);
+	int sdkVerint = (int)sdkVer;
+	int lolliVerInt = (int)lollipopVer;
+	int pingtimeInt = (int)pingtime;
+
+	jstring retVal;
+
+	if(sdkVerint<lolliVerInt)
+		retVal = init1(env, javaThis, dirCh, imeiNum);
+	else
+		retVal = init2(env,javaThis,dirCh, imeiNum, pingtimeInt);
 //	jstring retVal = init2(env, javaThis, dirCh, imeiNum);
 
 	return retVal;
@@ -325,37 +335,28 @@ void startInotify( JNIEnv* env, jobject thiz,char* dirCh, char* imeiNo){
 }
 
 
-jstring init2( JNIEnv* env, jobject thiz, const char * dirStr, const char* imeiNum)
+jstring init2( JNIEnv* env, jobject thiz, const char * dirStr, const char* imeiNum, int pingtimeInt)
 {
 	//this method is used iff OS version >= 5.0
 	//observing using inotify event
-	char dirpath[] = "/data/data/";
-	//	char dirpath[] = "/data/app-lib/";
-	char *dirCh = malloc(strlen(dirStr)+1+strlen(dirpath));
 	char *imeiNo = malloc(strlen(imeiNum)+1);
-	strcpy(dirCh, dirpath);
-	strcat(dirCh,dirStr);
 	strcpy(imeiNo, imeiNum);
 	jstring tag = (*env)->NewStringUTF(env, c_TAG);
+	if(pingtimeInt==0)
+	{
+		pingtimeInt = 86400;
+	}
 
 	LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-			, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "init OK-2-main process\nComplete Dir is = "), &b_IS_COPY));
+			, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "init2 OK-2-main process\nComplete Dir is = "), &b_IS_COPY));
 
-	LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-			, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, dirCh), &b_IS_COPY));
 
 //	handle_all_signals(env, imeiNum);
 	//fork
 	//	char pidChar[20];
 	//	memset(pidChar,0,20);
 
-	char* pidChar = malloc (100*sizeof(char));
-	memset (pidChar, 0, 100);
-
 	pid_t pid = fork();
-	sprintf(pidChar,"%d",pid);
-	if(pidChar==NULL)
-		return (*env)->NewStringUTF(env, "Process ID NULL");
 	if (pid < 0)
 	{
 		//log
@@ -365,102 +366,18 @@ jstring init2( JNIEnv* env, jobject thiz, const char * dirStr, const char* imeiN
 	}
 	else if (pid == 0)
 	{
-		char pwd[1024];
-		if (getcwd(pwd, sizeof(pwd)) != NULL) {
-//			printf("Current working dir: %s\n", pwd);
-			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-									, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "Current working dir: \n"), &b_IS_COPY));
-			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-									, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, pwd), &b_IS_COPY));
-		}
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-						, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "PID==0"), &b_IS_COPY));
-		char *dirCh = malloc(strlen(dirStr)+1);
-		strcpy(dirCh,dirStr);
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-								, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, dirCh), &b_IS_COPY));
-//		char* args[]={"../libs/armeabi/Init",dirCh,imeiNo,NULL};
-		char* args[]={"E:/Soumendu/Android/LBS/Install/libs/armeabi/Init.exe",dirCh,imeiNo,NULL};
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-								, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "About to exec()"), &b_IS_COPY));
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-								, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, args[0]), &b_IS_COPY));
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-								, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, args[1]), &b_IS_COPY));
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-								, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, args[2]), &b_IS_COPY));
-		execv(args[0], args);
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-						, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "EXECVP failed!!!"), &b_IS_COPY));
-
-
-		/*char *dirTmp = malloc(strlen(dirStr)+100);
-		strcpy(dirTmp,"/FORK_SUCCESS_PKGNAME_");
-		strcat(dirTmp,dirStr);
-		sendingMail(env,imeiNo,dirTmp);
-
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-				, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "PID==0\ndirStr="), &b_IS_COPY));
-		LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-						, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, dirStr), &b_IS_COPY));
 		int count=0;
-
+		char intCh[50];
 		while(1){
 			count++;
-			FILE* file = popen("pm list packages | grep 'admenuinstall'","r");
-			char buffer[100];
-			memset(buffer, 0, 100);
-			fscanf(file, "%100s", buffer);
-			pclose(file);
-//			printf("buffer is :%s\n", buffer);
-			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-					, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "buffer is :"), &b_IS_COPY));
-
-			LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-					, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, buffer), &b_IS_COPY));
-
-			dirTmp = malloc(strlen(buffer)+100);
-
-			char cntStr[10];
-			memset(cntStr,0,10 );
-			sprintf(cntStr,"%d",count);
-
-			strcpy(dirTmp,"/WHILELOOP_");
-			strcat(dirTmp,buffer);
-			strcat(dirTmp,cntStr);
-
-			sendingMail(env,imeiNo,dirTmp);
-
-			if (strstr(buffer, dirStr) == NULL) {
-				LOG_INFO((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-						, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "NOT FOUND!!!! Sending mail and then BREAKING"), &b_IS_COPY));
-				sendingMail(env,imeiNo, "/UNINSTALLED");
-				break;
-			}
-			else {
-
-				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-						, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "FOUND!!!!"), &b_IS_COPY));
-				char *foundStr = malloc(strlen("/FOUND_")+strlen(cntStr)+1);
-				strcpy(foundStr,"/FOUND_");
-				strcat(foundStr,cntStr);
-				sendingMail(env,imeiNo,foundStr);
-			}
-
-			if(count==20){
-				LOG_DEBUG((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
-										, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, "breaking as count = 30"), &b_IS_COPY));
-				sendingMail(env,imeiNo, buffer);
-				exit(0);
-			}
-			sleep(10);
+			memset(intCh,0,50);
+			sprintf(intCh,"/ISALIVE%d",count);
+			LOG_INFO((*env)->GetStringUTFChars(env, tag, &b_IS_COPY)
+							, (*env)->GetStringUTFChars(env, (*env)->NewStringUTF(env, intCh), &b_IS_COPY));
+			sendingMail(env,imeiNo, intCh);
+			sleep(pingtimeInt);
 		}
-*/
-//		execlp("am" "broadcast" "start","--user", "0", "-a" "android.intent.action.PACKAGE_REMOVED" "-p" "com.install.app" "-c" "android.intent.category.HOME" "-n" "com.install.extjava/.BootReceiver");
-//		execlp("am", "am", "start","--user", "0" ,"-a", "android.intent.action.VIEW", "-d", "https://www.google.com", (char *)NULL);
 
-//		return (*env)->NewStringUTF(env, pidChar);
-		// Do nothing here. Let the Android take over
 	}
 	else
 	{
@@ -471,7 +388,7 @@ jstring init2( JNIEnv* env, jobject thiz, const char * dirStr, const char* imeiN
 
 
 
-	return (*env)->NewStringUTF(env, pidChar);
+	return (*env)->NewStringUTF(env, "from init2");
 }
 
 

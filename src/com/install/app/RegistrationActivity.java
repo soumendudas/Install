@@ -5,6 +5,8 @@ import java.util.regex.Pattern;
 
 import org.json.JSONObject;
 
+import com.install.app.R;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;

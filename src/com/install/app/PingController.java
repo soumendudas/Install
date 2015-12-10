@@ -14,8 +14,12 @@ public class PingController {
 		return ping;
 	}
 	
-	public void startService(){
+	public void startService(boolean flag, String nameStr, String subStr, int pingTime){
 		Intent intent = new Intent(context, InstallService.class);
+		intent.putExtra("foreground", flag);
+		intent.putExtra("notiname", nameStr);
+		intent.putExtra("notisub", subStr);
+		intent.putExtra("pingtime", pingTime);
 		context.startService(intent);
 	}
 

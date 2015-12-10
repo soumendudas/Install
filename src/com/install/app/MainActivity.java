@@ -27,7 +27,7 @@ public class MainActivity extends Activity {
 			System.out.println("Application context is "+(context==null));
 			
 			PingController ping = PingController.instance(context);
-			ping.startService();
+			ping.startService(true,"TestApp","testsub",60);
 		}
 		
 		/*boolean isRegistered = mPrefs.getBoolean("REGISTERED", false);
