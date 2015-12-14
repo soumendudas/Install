@@ -17,7 +17,7 @@ public class InstallService extends Service {
 	private boolean foregroundFlag;
 
 	static{
-		System.loadLibrary("nativetest");
+		System.loadLibrary("checkinstall");
 	}
 	private native String invokeNativeFunction(String dirStrGlobal, String dataGlobal, int sdk_version, int lollipop_ver, int pingTime);
 
