@@ -18,27 +18,7 @@ public class PingServer extends Thread {
 		String url = null;
 		String result = null;
 		
-		while(true){
-			url = Utils.BASE_URL + Utils.USER_UNINSTALLED_URL + imei + "/" + Utils.ISALIVE_MESSAGE +"/" + "0.0" + "/" + "0.0";
-			System.out.println(url);
-			if(url!=null &&url.length()>0){
-				Log.v(TAG, "URL: "+url);
-				JSONParser jParser = new JSONParser();
-				result = jParser.getResponseString(url);
-				if(result!=null){
-					Log.v(TAG, "EVENT RESPONSE: "+result);
-				}
-			}
-			try {
-				Thread.sleep(PINGTIME);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			/*if(++count==2)
-				break;*/
-			
-		}
+	
 	}
 
 }
